@@ -17,22 +17,21 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 SECRET_KEY = b'abcdefghijklmnop'
 
 # Database setup
-import json
+import redis
 
-def save_message(user, message):
-    data = {"user": user, "message": message}
-    with open("messages.json", "a") as file:
-        json.dump(data, file)
-        file.write("\n")
+redis_client = redis.Redis(host="your-redis-host", port=your-port, password="your-password", decode_responses=True)
 
-def load_messages():
-    messages = []
-    try:
-        with open("messages.json", "r") as file:
-            for line in file:
-                messages.append(json.loads(line))
-    except FileNotFoundError:
-        pass
+@socketio.on("send_message")
+def handle_message(data):
+    redis_client.rpush("chat_messages", data["user"] + ": " + data["message"])  # Store message in Redis
+    socketio.emit("receive_message", data)
+
+@socketio.on("request_messages")
+def send_previous_messages():
+    messages = redis_client.lrange("chat_messages", 0, -1)  # Get stored messages
+    for msg in messages:
+        socketio.emit("receive_message", {"user": "System", "message": msg})
+
     return messages
 
 def pad_message(message):
