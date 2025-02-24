@@ -9,7 +9,7 @@ import wave
 import threading
 from flask import Flask, request, jsonify
 from flask_socketio import SocketIO, send
-import sqlite3
+import json
 import bcrypt
 
 # ---------------- Flask Server (Backend) ----------------
@@ -18,10 +18,23 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 SECRET_KEY = b'abcdefghijklmnop'
 
 # Database setup
-conn = sqlite3.connect('users.db', check_same_thread=False)
-cursor = conn.cursor()
-cursor.execute('''CREATE TABLE IF NOT EXISTS users (username TEXT, password TEXT)''')
-conn.commit()
+import json
+
+def save_message(user, message):
+    data = {"user": user, "message": message}
+    with open("messages.json", "a") as file:
+        json.dump(data, file)
+        file.write("\n")
+
+def load_messages():
+    messages = []
+    try:
+        with open("messages.json", "r") as file:
+            for line in file:
+                messages.append(json.loads(line))
+    except FileNotFoundError:
+        pass
+    return messages
 
 def pad_message(message):
     return message + (16 - len(message) % 16) * chr(16 - len(message) % 16)
