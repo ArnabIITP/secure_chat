@@ -9,7 +9,6 @@ import wave
 import threading
 from flask import Flask, request, jsonify
 from flask_socketio import SocketIO, send
-import json
 import bcrypt
 
 # ---------------- Flask Server (Backend) ----------------
